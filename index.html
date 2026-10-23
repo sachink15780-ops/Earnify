@@ -1,0 +1,296 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Earnify - Rewards</title>
+<style>
+:root{--bg:#0b1020;--card:#151e32;--green:#19d3a2;--muted:#9aa9c0;--white:#f5f8ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--white);font-family:Arial,sans-serif}
+button,input{font:inherit}
+button{cursor:pointer}
+header{padding:20px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #27334a}
+.logo{font-size:25px;font-weight:800;color:var(--green)}
+.wrap{max-width:500px;margin:auto;padding:18px}
+.card{background:var(--card);padding:18px;border-radius:17px;margin:14px 0;border:1px solid #27334a}
+.muted{color:var(--muted);font-size:13px}
+.balance{background:linear-gradient(135deg,#087e68,#16bd91);border:0}
+.balance h1{font-size:36px;margin:12px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.stat{background:#0d1728;padding:15px;border-radius:12px}
+.stat b{display:block;font-size:22px;margin-top:8px}
+button.primary{background:var(--green);color:#06251e;border:0;padding:12px 16px;border-radius:10px;font-weight:bold}
+button.secondary{background:#25344d;color:white;border:1px solid #3a4b67;padding:11px 14px;border-radius:10px}
+button:disabled{opacity:.45;cursor:not-allowed}
+input{display:block;width:100%;padding:13px;background:#0c1527;border:1px solid #36445c;border-radius:10px;color:white;margin:10px 0}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.task{padding:14px 0;border-bottom:1px solid #2a3549}
+.task:last-child{border:0}
+h2{font-size:19px}
+nav{position:sticky;bottom:0;background:#111a2b;display:flex;justify-content:space-around;padding:10px 2px;border-top:1px solid #303c50}
+nav button{background:none;border:0;color:#b8c5d8;font-size:12px;padding:8px 3px}
+nav button span{display:block;font-size:19px;margin-bottom:5px}
+nav button.active{color:var(--green)}
+.page{display:none}.page.active{display:block}
+.notice{padding:12px;border-radius:10px;background:#0d1728;color:var(--muted);font-size:13px;line-height:1.6}
+.pill{color:var(--green);font-size:12px}
+h3{margin:0 0 5px}
+footer{text-align:center;color:#687a96;font-size:12px;padding:22px}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">✦ Earnify</div>
+  <button class="secondary" id="accountBtn" onclick="logout()">Login</button>
+</header>
+
+<main class="wrap">
+<section id="auth" class="page active">
+  <div class="card">
+    <h2 id="authTitle">Welcome to Earnify 👋</h2>
+    <p class="muted">Sign in or create your account.</p>
+    <div id="nameField" style="display:none">
+      <label>Your name</label><input id="name" placeholder="Enter your name">
+    </div>
+    <label>Email</label><input id="email" type="email" placeholder="you@example.com">
+    <label>Password</label><input id="password" type="password" placeholder="Enter password">
+    <div id="refField"><label>Referral code (optional)</label><input id="refInput" placeholder="Referral code"></div>
+    <button class="primary" style="width:100%" id="authAction" onclick="authenticate()">Login</button>
+    <p class="muted" style="text-align:center;margin-top:18px">
+      <a href="#" onclick="toggleAuth();return false" id="authToggle" style="color:var(--green)">Create a new account</a>
+    </p>
+  </div>
+  <p class="notice">Earnify rewards are subject to task verification and program rules. This starter version does not process real payments.</p>
+</section>
+
+<section id="home" class="page">
+  <h2 id="welcome">Welcome back!</h2>
+  <div class="card balance">
+    <span>Available demo balance</span>
+    <h1 id="balance">₹0.00</h1>
+    <div class="row"><span>Earn more by completing tasks</span><span>₹ INR</span></div>
+  </div>
+  <div class="grid">
+    <div class="stat"><span class="muted">Tasks completed</span><b id="completed">0</b></div>
+    <div class="stat"><span class="muted">My referrals</span><b id="refCount">0</b></div>
+  </div>
+  <div class="card">
+    <div class="row"><h2>Daily check-in</h2><span class="pill">DAILY</span></div>
+    <p class="muted">Claim your demo reward once per day.</p>
+    <button class="primary" id="checkinBtn" onclick="checkin()">Claim ₹1</button>
+  </div>
+  <div class="card">
+    <h2>Quick actions</h2>
+    <div class="grid">
+      <button class="secondary" onclick="showPage('tasks')">📋 Tasks</button>
+      <button class="secondary" onclick="showPage('referral')">👥 Referrals</button>
+      <button class="secondary" onclick="showPage('wallet')">💰 Wallet</button>
+      <button class="secondary" onclick="showPage('ads')">📺 Ads</button>
+    </div>
+  </div>
+</section>
+
+<section id="tasks" class="page">
+  <h2>Available Tasks</h2>
+  <p class="muted">Complete each demo task once.</p>
+  <div class="card" id="taskList"></div>
+</section>
+
+<section id="wallet" class="page">
+  <h2>My Wallet</h2>
+  <div class="card balance"><span>Demo balance</span><h1 id="walletBalance">₹0.00</h1></div>
+  <div class="card">
+    <h2>Withdrawal request</h2>
+    <p class="muted">Demo minimum: ₹100. No real payment will be sent.</p>
+    <input id="withdrawAmount" type="number" min="100" placeholder="Amount in ₹">
+    <input id="upi" placeholder="UPI ID (demo only)">
+    <button class="primary" onclick="requestWithdraw()">Submit request</button>
+  </div>
+  <div class="card"><h2>Wallet history</h2><div id="history" class="muted">No transactions yet.</div></div>
+</section>
+
+<section id="referral" class="page">
+  <h2>Invite Friends 🎁</h2>
+  <div class="card">
+    <p class="muted">Your referral code</p>
+    <h2 id="myCode">—</h2>
+    <button class="primary" onclick="copyReferral()">Copy referral code</button>
+    <p class="muted">Share your code with friends when they register.</p>
+  </div>
+  <div class="card">
+    <h2>Referral rewards</h2>
+    <p class="muted">Referral counts and rewards are demo-only until verified on a secure backend.</p>
+    <div id="referralsList" class="muted">No referrals yet.</div>
+  </div>
+</section>
+
+<section id="ads" class="page">
+  <h2>Sponsored Content</h2>
+  <div class="card">
+    <h3>Your ads area</h3>
+    <p class="muted">Add your approved ad network code here later.</p>
+    <div class="notice">Ad placements are not active. Never ask users to click ads or watch ads artificially to generate ad revenue. Follow your ad provider's policies.</div>
+  </div>
+</section>
+
+<section id="admin" class="page">
+  <h2>Admin Dashboard</h2>
+  <p class="notice">Preview only. This page is not securely protected. Do not use it to manage real users or money until server-side authentication and authorization are implemented.</p>
+  <div class="grid">
+    <div class="stat"><span class="muted">Local accounts</span><b id="adminUsers">0</b></div>
+    <div class="stat"><span class="muted">Withdrawal requests</span><b id="adminWithdrawals">0</b></div>
+  </div>
+  <div class="card">
+    <h2>Withdrawal requests</h2>
+    <div id="adminRequestList" class="muted">No requests.</div>
+  </div>
+  <div class="card">
+    <h2>Task reward settings (demo)</h2>
+    <p class="muted">Set the reward for the next task completion.</p>
+    <input id="rewardSetting" type="number" min="0" step="0.5" value="2" placeholder="Reward ₹">
+    <button class="primary" onclick="saveReward()">Save demo reward</button>
+  </div>
+  <button class="secondary" onclick="showPage('home')">Back to dashboard</button>
+</section>
+
+<footer>Earnify • Rewards dashboard prototype</footer>
+</main>
+
+<nav id="bottomNav" style="display:none">
+  <button class="active" data-page="home" onclick="showPage('home')"><span>⌂</span>Home</button>
+  <button data-page="tasks" onclick="showPage('tasks')"><span>☑</span>Tasks</button>
+  <button data-page="wallet" onclick="showPage('wallet')"><span>₹</span>Wallet</button>
+  <button data-page="referral" onclick="showPage('referral')"><span>♧</span>Refer</button>
+  <button data-page="admin" onclick="adminAccess()"><span>⚙</span>Admin</button>
+</nav>
+
+<script>
+const $=id=>document.getElementById(id);
+const read=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key))??fallback}catch{return fallback}};
+const write=(key,value)=>localStorage.setItem(key,JSON.stringify(value));
+let users=read('earnify_users',[]);
+let withdrawals=read('earnify_withdrawals',[]);
+let current=read('earnify_current',null);
+let isSignup=false;
+let demoReward=Number(read('earnify_reward',2));
+
+const tasks=[
+ {id:'learn',title:'Explore Earnify',desc:'Visit the dashboard',reward:demoReward},
+ {id:'profile',title:'Check your profile',desc:'Review your account',reward:demoReward},
+ {id:'daily',title:'Daily check-in',desc:'Claim your daily demo reward',reward:1}
+];
+
+function money(n){return '₹'+Number(n||0).toFixed(2)}
+function saveUsers(){write('earnify_users',users)}
+function user(){return users.find(u=>u.email===current)}
+function toggleAuth(){
+ isSignup=!isSignup;
+ $('authTitle').textContent=isSignup?'Create your account':'Welcome to Earnify 👋';
+ $('nameField').style.display=isSignup?'block':'none';
+ $('refField').style.display=isSignup?'block':'none';
+ $('authAction').textContent=isSignup?'Sign up':'Login';
+ $('authToggle').textContent=isSignup?'Already have an account? Login':'Create a new account';
+}
+function authenticate(){
+ const email=$('email').value.trim().toLowerCase();
+ const password=$('password').value;
+ if(!email||!password){alert('Enter email and password.');return}
+ if(isSignup){
+  const name=$('name').value.trim();
+  if(!name){alert('Enter your name.');return}
+  if(users.some(u=>u.email===email)){alert('Account already exists. Please login.');return}
+  const code='EF'+Math.random().toString(36).slice(2,8).toUpperCase();
+  const ref=$('refInput').value.trim().toUpperCase();
+  const inviter=users.find(u=>u.code===ref);
+  const u={name,email,password,code,balance:0,completed:[],history:[],checkin:'',invitedBy:inviter?inviter.email:'',referrals:[]};
+  users.push(u);
+  if(inviter)inviter.referrals.push(email);
+  current=email;saveUsers();
+ }else{
+  const u=users.find(u=>u.email===email&&u.password===password);
+  if(!u){alert('Account not found or incorrect password.');return}
+  current=email;
+ }
+ write('earnify_current',current);
+ $('password').value='';
+ render();showPage('home');
+}
+function logout(){
+ if(current){current=null;localStorage.removeItem('earnify_current');render();showPage('auth')}
+ else showPage('auth');
+}
+function showPage(id){
+ if(id==='admin'&& !current){alert('Please login first.');return}
+ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+ $(id).classList.add('active');
+ document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
+ window.scrollTo(0,0);
+}
+function addReward(id,amount){
+ const u=user();if(!u)return;
+ if(u.completed.includes(id)){alert('This task is already completed.');return}
+ u.completed.push(id);u.balance+=amount;
+ u.history.unshift({text:'Task reward: '+id,amount,date:new Date().toLocaleString()});
+ saveUsers();render();
+}
+function checkin(){
+ const u=user();if(!u)return;
+ const today=new Date().toDateString();
+ if(u.checkin===today){alert('Daily check-in already claimed today.');return}
+ u.checkin=today;u.balance+=1;
+ u.history.unshift({text:'Daily check-in',amount:1,date:new Date().toLocaleString()});
+ saveUsers();render();alert('₹1 demo reward added.');
+}
+function requestWithdraw(){
+ const u=user(),amount=Number($('withdrawAmount').value);
+ if(!u)return;
+ if(!Number.isFinite(amount)||amount<100){alert('Minimum demo withdrawal is ₹100.');return}
+ if(amount>u.balance){alert('Insufficient demo balance.');return}
+ withdrawals.push({email:u.email,amount,upi:$('upi').value,status:'Pending',date:new Date().toLocaleString()});
+ write('earnify_withdrawals',withdrawals);
+ alert('Demo request saved locally; no money will be transferred.');
+ $('withdrawAmount').value='';render();
+}
+function copyReferral(){
+ const code=user()?.code||'';
+ if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(code).then(()=>alert('Referral code copied: '+code)).catch(()=>prompt('Copy your code:',code));
+ else prompt('Copy your code:',code);
+}
+function saveReward(){
+ const n=Number($('rewardSetting').value);
+ if(!Number.isFinite(n)||n<0){alert('Enter a valid reward.');return}
+ demoReward=n;write('earnify_reward',n);alert('Demo reward saved. New task completions will use it.');
+}
+function adminAccess(){
+ alert('Admin preview only. A secure, owner-only admin panel requires backend authentication and server-side permissions. This demo does not verify an administrator.');
+ showPage('admin');
+}
+function render(){
+ const u=user();
+ $('accountBtn').textContent=u?'Logout':'Login';
+ $('bottomNav').style.display=u?'flex':'none';
+ if(!u){return}
+ $('welcome').textContent='Hello, '+u.name+' 👋';
+ $('balance').textContent=money(u.balance);
+ $('walletBalance').textContent=money(u.balance);
+ $('completed').textContent=u.completed.length;
+ $('refCount').textContent=u.referrals.length;
+ $('myCode').textContent=u.code;
+ $('checkinBtn').disabled=u.checkin===new Date().toDateString();
+ $('checkinBtn').textContent=$('checkinBtn').disabled?'Claimed today':'Claim ₹1';
+ $('taskList').innerHTML=tasks.map(t=>`<div class="task row"><div><b>${t.title}</b><p class="muted">${t.desc}</p><span class="pill">Reward ${money(t.reward)}</span></div><button class="primary" ${u.completed.includes(t.id)?'disabled':''} onclick="addReward('${t.id}',${t.reward})">${u.completed.includes(t.id)?'Done':'Start'}</button></div>`).join('');
+ $('history').innerHTML=u.history.length?u.history.map(h=>`<div class="task"><b>${h.text}</b><p class="muted">${h.date} · +${money(h.amount)}</p></div>`).join(''):'No transactions yet.';
+ $('referralsList').textContent=u.referrals.length?u.referrals.join(', '):'No referrals yet.';
+ $('adminUsers').textContent=users.length;
+ $('adminWithdrawals').textContent=withdrawals.length;
+ $('adminRequestList').innerHTML=withdrawals.length?withdrawals.map((w,i)=>`<div class="task"><b>${w.email}</b><p class="muted">${money(w.amount)} · ${w.status}</p></div>`).join(''):'No requests.';
+}
+render();
+if(current&&!user()){current=null;localStorage.removeItem('earnify_current')}
+if(current){showPage('home')}else{showPage('auth')}
+</script>
+</body>
+  </html>
+  
